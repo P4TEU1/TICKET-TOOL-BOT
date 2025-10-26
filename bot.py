@@ -82,11 +82,12 @@ async def on_interaction(interaction: Interaction):
             await interaction.followup.send("Categoria de ticket nu a fost găsită.", ephemeral=True)
             return
 
-        # verifică dacă userul are deja ticket
+        # verifică dacă userul are deja ticket (doar canale text)
         for c in guild.channels:
-            if c.topic and f"Ticket for {interaction.user.id}" in c.topic:
-                await interaction.followup.send(f"Ai deja un ticket: {c.mention}", ephemeral=True)
-                return
+            if isinstance(c, discord.TextChannel):
+                if c.topic and f"Ticket for {interaction.user.id}" in c.topic:
+                    await interaction.followup.send(f"Ai deja un ticket: {c.mention}", ephemeral=True)
+                    return
 
         # creează canalul de ticket
         channel_name = f"ticket-{interaction.user.name.lower()}"
@@ -111,7 +112,7 @@ async def on_interaction(interaction: Interaction):
 
     elif interaction.data["custom_id"] == "close_ticket":
         channel = interaction.channel
-        if not channel.topic or "Ticket for" not in channel.topic:
+        if not hasattr(channel, "topic") or not channel.topic or "Ticket for" not in channel.topic:
             await interaction.response.send_message("Acest canal nu este un ticket.", ephemeral=True)
             return
         await interaction.response.defer(ephemeral=True)
