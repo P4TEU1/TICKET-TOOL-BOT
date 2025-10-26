@@ -57,11 +57,23 @@ async def setup(interaction: Interaction, category: str):
         return
     config['panels'][str(guild.id)] = {"category_id": int(category)}
     save_config()
+
+    # Embed personalizat cu P4TEU și detalii
     embed = discord.Embed(
-        title="🎟 Suport / Tickets",
-        description="Apasă butonul pentru a deschide un ticket!",
-        color=0x00AE86
+        title="🎫 Ticket Support - P4TEU",
+        description=(
+            "Salut! 👋\n\n"
+            "Acesta este sistemul de ticket pentru server.\n"
+            "Apasă butonul de mai jos pentru a deschide un ticket.\n\n"
+            "**Owner:** P4TEU\n"
+            "**Ce poți face aici:** Raportare bug-uri, întrebări, sugestii.\n"
+            "Un membru al staff-ului te va ajuta cât mai curând."
+        ),
+        color=0x1ABC9C  # culoare turcoaz
     )
+    embed.set_footer(text="Ticket System by P4TEU")
+    embed.set_thumbnail(url="https://i.imgur.com/your_logo.png")  # pune logo-ul tău aici
+
     await interaction.response.send_message(embed=embed, view=TicketView())
 
 # Handler pentru click pe butoane
