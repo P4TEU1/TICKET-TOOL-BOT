@@ -117,8 +117,11 @@ async def on_interaction(interaction: Interaction):
             return
         await interaction.response.defer(ephemeral=True)
         user_id = int(channel.topic.split("Ticket for ")[1])
-        messages = await channel.history(limit=None).flatten()
+
+        # Adună toate mesajele fără flatten()
+        messages = [msg async for msg in channel.history(limit=None)]
         messages.reverse()
+
         transcript = "\n".join([f"[{m.created_at}] {m.author}: {m.content}" for m in messages])
         transcript_file = f"transcript-{channel.id}.txt"
         with open(transcript_file, "w", encoding="utf-8") as f:
