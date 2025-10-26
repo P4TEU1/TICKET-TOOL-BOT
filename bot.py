@@ -10,7 +10,7 @@ TOKEN = os.environ.get("BOT_TOKEN")
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
-intents.message_content = True  # important!
+intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
@@ -25,13 +25,11 @@ def save_config():
     with open(CONFIG_FILE, "w") as f:
         json.dump(config, f, indent=2)
 
-# View pentru butonul de deschis ticket
 class TicketView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.add_item(Button(label="Deschide Ticket", style=ButtonStyle.primary, custom_id="open_ticket"))
 
-# View pentru butonul de închis ticket
 class CloseTicketView(View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -58,21 +56,25 @@ async def setup(interaction: Interaction, category: str):
     config['panels'][str(guild.id)] = {"category_id": int(category)}
     save_config()
 
-    # Embed personalizat cu P4TEU și detalii
+    # Embed personalizat, lung pe verticală
     embed = discord.Embed(
         title="🎫 Ticket Support - P4TEU",
         description=(
             "Salut! 👋\n\n"
-            "Acesta este sistemul de ticket pentru server.\n"
-            "Apasă butonul de mai jos pentru a deschide un ticket.\n\n"
-            "**Owner:** P4TEU\n"
-            "**Ce poți face aici:** Raportare bug-uri, întrebări, sugestii.\n"
-            "Un membru al staff-ului te va ajuta cât mai curând."
+            "Bine ai venit la sistemul nostru de ticket-uri.\n"
+            "Apasă butonul de mai jos pentru a deschide un ticket și un membru al staff-ului te va ajuta cât mai curând.\n\n"
+            "Vei primi acces la un canal privat unde poți discuta direct cu staff-ul."
         ),
-        color=0x1ABC9C  # culoare turcoaz
+        color=0x1ABC9C
     )
+
     embed.set_footer(text="Ticket System by P4TEU")
     embed.set_thumbnail(url="https://i.imgur.com/your_logo.png")  # pune logo-ul tău aici
+
+    embed.add_field(name="👑 Owner", value="P4TEU", inline=False)
+    embed.add_field(name="🛠 Tipuri de suport", value="- Raportare bug-uri\n- Întrebări generale\n- Sugestii și feedback\n- Alte probleme", inline=False)
+    embed.add_field(name="📌 Instrucțiuni", value="Apasă butonul de mai jos pentru a crea un ticket.\nFiecare ticket este privat și doar tu și staff-ul îl veți putea vedea.", inline=False)
+    embed.add_field(name="ℹ️ Notă", value="Asigură-te că oferi cât mai multe detalii despre problema ta pentru a primi ajutor rapid.", inline=False)
 
     await interaction.response.send_message(embed=embed, view=TicketView())
 
@@ -83,7 +85,7 @@ async def on_interaction(interaction: Interaction):
         return
 
     if interaction.data["custom_id"] == "open_ticket":
-        await interaction.response.defer(ephemeral=True)  # evită "This interaction failed"
+        await interaction.response.defer(ephemeral=True)
         guild = interaction.guild
         panel = config['panels'].get(str(guild.id))
         if not panel:
@@ -94,14 +96,12 @@ async def on_interaction(interaction: Interaction):
             await interaction.followup.send("Categoria de ticket nu a fost găsită.", ephemeral=True)
             return
 
-        # verifică dacă userul are deja ticket (doar canale text)
         for c in guild.channels:
             if isinstance(c, discord.TextChannel):
                 if c.topic and f"Ticket for {interaction.user.id}" in c.topic:
                     await interaction.followup.send(f"Ai deja un ticket: {c.mention}", ephemeral=True)
                     return
 
-        # creează canalul de ticket
         channel_name = f"ticket-{interaction.user.name.lower()}"
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False),
@@ -130,7 +130,6 @@ async def on_interaction(interaction: Interaction):
         await interaction.response.defer(ephemeral=True)
         user_id = int(channel.topic.split("Ticket for ")[1])
 
-        # Adună toate mesajele fără flatten()
         messages = [msg async for msg in channel.history(limit=None)]
         messages.reverse()
 
@@ -139,7 +138,6 @@ async def on_interaction(interaction: Interaction):
         with open(transcript_file, "w", encoding="utf-8") as f:
             f.write(transcript)
 
-        # trimite transcript în DM
         user = await bot.fetch_user(user_id)
         try:
             await user.send(f"Transcriptul ticket-ului tău:", file=discord.File(transcript_file))
